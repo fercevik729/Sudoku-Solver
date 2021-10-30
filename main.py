@@ -261,7 +261,6 @@ def main():
     print(p.pprint_board())
     print(p.solve())
     print(p.pprint_board())
-    print(p.loc_sets[:-1])
 
 
 if __name__ == "__main__":
