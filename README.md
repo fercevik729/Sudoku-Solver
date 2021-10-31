@@ -26,10 +26,10 @@ Sudoku_display.visualize(delay=DELAY)
 
 ## Example
 
-Unsolved
+### Unsolved
 ![sudoku_unsolved](https://user-images.githubusercontent.com/62676762/139597870-227b5b12-095d-421a-bba9-86830e82c156.png)
 
-In progress
+### In progress
 ![Sudoku_in_progree](https://user-images.githubusercontent.com/62676762/139597903-537c4e87-258e-4034-922a-e365fb7fcd92.png)
 
 
