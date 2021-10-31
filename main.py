@@ -1,3 +1,12 @@
+#
+# Sudoku Solver
+# by Furkan Ercevik
+# 30 October 2021
+# This program implements basic features of object-oriented programming and the recursive backtracking algorithm to
+# devise a solution to an incomplete Sudoku puzzle
+#
+
+
 def get_square_coors(indices: tuple) -> list:
     """
     Finds the coordinates of the other elements in the corresponding square
@@ -53,47 +62,6 @@ class Sudoku(object):
                 nums = [int(n) for n in w.split()]
             for i in range(9):
                 self.board.append(nums[i*9:(i*9)+9])
-
-    def get_col(self, index: int) -> list:
-        """
-        Returns a column of the board corresponding to an index value
-        :param index: i integer ranging from 0 to 8
-        :return: a list representing the column
-        """
-        return [val[index] for val in self.board]
-
-    def get_row(self, index: int) -> list:
-        """
-        Returns a row of the board corresponding to an index value
-        :param index: i integer ranging from 0 to 8
-        :return: a list representing the row
-        """
-        return [val for val in self.board[index]]
-
-    def __str__(self) -> str:
-        """
-        Returns a string representation of the board
-        :return: string representing the board and its values
-        """
-        string = ""
-        for i in range(9):
-            # Every 3 rows add a big dashed line
-            if i % 3 == 0:
-                string += "+---------+---------+---------+\n"
-            for j in range(9):
-                # If the col index is a multiple of 3 add a pipe to the string
-                if j % 3 == 0:
-                    string += "|"
-                # Add the value or '.' to the string
-                string += " " + str(self.board[i][j] if self.board[i][j] else ".") + " "
-                # If the col index is the last one, add a pipe as well
-                if j == 8:
-                    string += "|"
-            # Add a new line at every row
-            string += "\n"
-        # Add the final big dashed line
-        string += "+---------+---------+---------+"
-        return string
 
     def solve(self) -> bool:
         """
@@ -156,6 +124,48 @@ class Sudoku(object):
             return False
         return True
 
+    def __str__(self) -> str:
+        """
+        Returns an elegant string representation of the board
+        :return: string representing the board and its values
+        """
+        string = ""
+        for i in range(9):
+            # Every 3 rows add a big dashed line
+            if i % 3 == 0:
+                string += "+---------+---------+---------+\n"
+            for j in range(9):
+                # If the col index is a multiple of 3 add a pipe to the string
+                if j % 3 == 0:
+                    string += "|"
+                # Add the value or '.' to the string
+                string += " " + str(self.board[i][j] if self.board[i][j] else ".") + " "
+                # If the col index is the last one, add a pipe as well
+                if j == 8:
+                    string += "|"
+            # Add a new line at every row
+            string += "\n"
+        # Add the final big dashed line
+        string += "+---------+---------+---------+"
+        return string
+
+    # Intended for debugging purposes
+    def get_col(self, index: int) -> list:
+        """
+        Returns a column of the board corresponding to an index value
+        :param index: i integer ranging from 0 to 8
+        :return: a list representing the column
+        """
+        return [val[index] for val in self.board]
+
+    def get_row(self, index: int) -> list:
+        """
+        Returns a row of the board corresponding to an index value
+        :param index: i integer ranging from 0 to 8
+        :return: a list representing the row
+        """
+        return [val for val in self.board[index]]
+
 
 def main():
     board = [[0, 0, 4, 0, 0, 0, 0, 6, 7],
@@ -172,12 +182,12 @@ def main():
 
     s = Sudoku(board=board)
     print(s)
-    print(s.solve())
+    s.solve()
     print(s)
 
     p = Sudoku(file="Sudokus")
     print(p)
-    print(p.solve())
+    p.solve()
     print(p)
 
 
