@@ -149,23 +149,6 @@ class Sudoku(object):
         string += "+---------+---------+---------+"
         return string
 
-    # Intended for debugging purposes
-    def get_col(self, index: int) -> list:
-        """
-        Returns a column of the board corresponding to an index value
-        :param index: i integer ranging from 0 to 8
-        :return: a list representing the column
-        """
-        return [val[index] for val in self.board]
-
-    def get_row(self, index: int) -> list:
-        """
-        Returns a row of the board corresponding to an index value
-        :param index: i integer ranging from 0 to 8
-        :return: a list representing the row
-        """
-        return [val for val in self.board[index]]
-
 
 def main():
     board = [[0, 0, 4, 0, 0, 0, 0, 6, 7],
@@ -191,8 +174,8 @@ def main():
     print(p)
 
 
-if __name__ == "__main__":
-    main()
+main()
+
 
 
 
