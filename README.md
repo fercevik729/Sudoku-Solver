@@ -11,7 +11,7 @@ it.
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install Sudoku-Solver.
 (To be implemented)
 ```bash
-pip install Sudoku-Solver
+pip install git+https://github.com/fercevik729/Sudoku-Solver/master
 ```
 
 ## Usage
