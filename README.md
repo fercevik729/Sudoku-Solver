@@ -17,7 +17,7 @@ pip install git+https://github.com/fercevik729/Sudoku-Solver/master
 ## Usage
 
 ```python
-from Sudoku-Solver import Sudoku_display
+from SudokuSolver import Sudoku_display
 
 # displays a pygame window of the Sudoku puzzle. To completely solve press SPACEBAR. At the end after 5 seconds it will close and print out the time it took to solve it
 Sudoku_display.visualize(delay=DELAY)
