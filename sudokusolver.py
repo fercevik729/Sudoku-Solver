@@ -63,10 +63,11 @@ class Sudoku(object):
             for i in range(9):
                 self.board.append(nums[i*9:(i*9)+9])
 
-    def solve(self) -> bool:
+    def solve(self, squares=None) -> bool:
         """
         Using a backtracking algorithm, this function sets and resets the values of empty cells to numbers between
         1 and 9 until all of the cells are filled with values that abide by Sudoku's rules
+        :param squares: list of square objects that can be manipulated if they exist (for visualization purposes)
         :return: True if all the cells can be properly filled with values from 1-9, False if otherwise
         """
         # Iterate over all the rows and columns
@@ -78,12 +79,23 @@ class Sudoku(object):
                         # Validate that the value at that position works
                         if self.validate(r, c, val):
                             self.board[r][c] = val
+                            # If Square objects are passed
+                            if squares:
+                                # Retrieve the affected Square object and call the replace method on it
+                                # (for visualization)
+                                affected = squares[(r, c)]
+                                affected.replace(val)
                             # If all the solutions for the next empty cells make logical sense return True
                             if self.solve():
                                 return True
                             else:
                                 # Otherwise reassign the current value to 0 and redo the backtracking process
+                                # (for visualization)
                                 self.board[r][c] = 0
+                                if squares:
+                                    # Retrieve the changed Square object and call the delete method on it
+                                    to_change = squares[(r, c)]
+                                    to_change.delete()
                     # If all the values have been tried and don't work then this solution is incorrect
                     return False
         # If there are no more empty cells return True
