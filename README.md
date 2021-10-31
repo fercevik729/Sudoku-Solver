@@ -8,8 +8,8 @@ it.
 
 ## Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
-
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install Sudoku-Solver.
+(To be implemented)
 ```bash
 pip install Sudoku-Solver
 ```
@@ -17,16 +17,24 @@ pip install Sudoku-Solver
 ## Usage
 
 ```python
-from Sudoku-Solver import Sudoku_solver
+from Sudoku-Solver import Sudoku_display
 
-# displays a Sudoku puzzle
-Sudoku_solver.visualize()
+# displays a pygame window of the Sudoku puzzle. To completely solve press SPACEBAR. At the end after 5 seconds it will close and print out the time it took to solve it
+Sudoku_display.visualize(delay=DELAY)
 
 ```
+
+## Example
+
+Unsolved
+![sudoku_unsolved](https://user-images.githubusercontent.com/62676762/139597870-227b5b12-095d-421a-bba9-86830e82c156.png)
+
+In progress
+![Sudoku_in_progree](https://user-images.githubusercontent.com/62676762/139597903-537c4e87-258e-4034-922a-e365fb7fcd92.png)
+
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-Please make sure to update tests as appropriate.
 
 ## License
