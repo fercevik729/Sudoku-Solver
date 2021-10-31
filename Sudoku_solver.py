@@ -5,6 +5,9 @@
 # This program implements basic features of object-oriented programming and the recursive backtracking algorithm to
 # devise a solution to an incomplete Sudoku puzzle
 #
+import time
+
+import pygame
 
 
 def get_square_coors(indices: tuple) -> list:
@@ -63,11 +66,13 @@ class Sudoku(object):
             for i in range(9):
                 self.board.append(nums[i*9:(i*9)+9])
 
-    def solve(self, squares=None) -> bool:
+    def solve(self, squares=None, screen=None, delay=None) -> bool:
         """
         Using a backtracking algorithm, this function sets and resets the values of empty cells to numbers between
         1 and 9 until all of the cells are filled with values that abide by Sudoku's rules
         :param squares: list of square objects that can be manipulated if they exist (for visualization purposes)
+        :param screen: a pygame screen
+        :param delay: the delay factor for the visualization
         :return: True if all the cells can be properly filled with values from 1-9, False if otherwise
         """
         # Iterate over all the rows and columns
@@ -82,11 +87,14 @@ class Sudoku(object):
                             # If Square objects are passed
                             if squares:
                                 # Retrieve the affected Square object and call the replace method on it
-                                # (for visualization)
-                                affected = squares[(r, c)]
+                                # Then draw the affected square onto the screen
+                                affected = squares[r][c]
                                 affected.replace(val)
+                                time.sleep(delay)
+                                affected.draw(screen)
+                                pygame.display.update(affected.rect)
                             # If all the solutions for the next empty cells make logical sense return True
-                            if self.solve():
+                            if self.solve(squares, screen, delay):
                                 return True
                             else:
                                 # Otherwise reassign the current value to 0 and redo the backtracking process
@@ -94,8 +102,12 @@ class Sudoku(object):
                                 self.board[r][c] = 0
                                 if squares:
                                     # Retrieve the changed Square object and call the delete method on it
-                                    to_change = squares[(r, c)]
+                                    # Then draw the affect square onto the screen
+                                    to_change = squares[r][c]
                                     to_change.delete()
+                                    time.sleep(delay)
+                                    to_change.draw(screen)
+                                    pygame.display.update(to_change.rect)
                     # If all the values have been tried and don't work then this solution is incorrect
                     return False
         # If there are no more empty cells return True
@@ -128,11 +140,15 @@ class Sudoku(object):
                 cols.append(self.board[i][c])
         rows = self.board[r][:c] + self.board[r][c+1:]
         sq = get_square_coors((r, c))
+        sq_vals = []
+        for s in sq:
+            r,c = s
+            sq_vals.append(self.board[r][c])
         if val in cols:
             return False
         if val in rows:
             return False
-        if val in sq:
+        if val in sq_vals:
             return False
         return True
 
@@ -202,9 +218,11 @@ def main():
     p.solve()
     print(p)
 
+    print(get_square_coors((0,0)))
 
-if __name__ == "__main__":
-    main()
+
+main()
+
 
 
 
