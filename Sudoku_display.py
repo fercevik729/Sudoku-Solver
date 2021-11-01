@@ -12,9 +12,7 @@ import sys
 import time
 import random
 
-# TODO: Future program ideas: turn the visualizer into a playable game with a game clock, have Square objects that
-#  the player can edit and confirm the values of, have a background process that checks for mistakes and solves the
-#  program after 3 mistakes,
+# TODO: Make "note" function for user to note potential values in the squares
 
 # Pygame window setup
 pygame.init()
@@ -26,7 +24,8 @@ pygame.display.set_caption("Sudoku")
 LOGO = pygame.image.load("assets/letter_s.png")
 GRID = pygame.image.load("assets/blank-sudoku-grid.png")
 pygame.display.set_icon(LOGO)
-COLORS = {"WHITE": (255, 255, 255), "BLACK": (0, 0, 0), "GREEN": (0, 255, 0), "RED": (255, 0, 0)}
+COLORS = {"WHITE": (255, 255, 255), "BLACK": (0, 0, 0), "GREEN": (0, 255, 0), "RED": (255, 0, 0),
+          "LBLUE": (173, 216, 230)}
 DELAY = 0.0001
 FONT = pygame.font.Font(None, 25)
 TIME_FONT = pygame.font.Font(None, 40)
@@ -84,20 +83,23 @@ class Puzzle(object):
         sudoku.solve()
         self.solved_board = sudoku.board
 
-    def check(self) -> bool:
+    def check(self) -> int:
         """
         Checks for correctness of all values in the squares and resets the values of the incorrect squares
-        :return: True if all or correct, False if otherwise
+        :return: int representing the number of mistakes
         """
+        returnable = 0
         # For all the squares in the puzzle check that they match with the squares of the solved board
         for i in range(9):
             for j in range(9):
                 # If the value exists
                 sq = self.squares[i][j].get_val()
+                # If sq is nonzero and it doesn't match the corresponding value in the solved board
+                # replace and return False
                 if sq and self.solved_board[i][j] != sq:
-                    self.squares[i][j].delete()
-                    return False
-        return True
+                    self.squares[i][j].replace("")
+                    returnable += 1
+        return returnable
 
     def hint(self) -> None:
         """
@@ -113,9 +115,7 @@ class Puzzle(object):
             r = idx // 9
             c = idx % 9
         self.squares[r][c].replace(self.solved_board[r][c])
-
-    def get_squares(self):
-        return self.squares
+        self.squares[r][c].active = None
 
     def visual_solve(self, window, delay) -> bool:
         """
@@ -134,7 +134,7 @@ class Puzzle(object):
 
 
 class Square(object):
-    # TODO: add event handler for sudoku game
+    # TODO: add gray numbers
     """
      Makes Square objects that represents the individual squares of the Sudoku puzzle
     """
@@ -152,6 +152,38 @@ class Square(object):
         self.rect = pygame.Rect(x, y, s, s)
         self.text_surface = FONT.render(text, True, COLORS["BLACK"])
         self.b_color = COLORS["WHITE"]
+        self.active = None if not mutable else False
+
+    def handle_event(self, event):
+
+        # If the event is a button click
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # Check if the tile can be active
+            if self.active is not None:
+                # Check if the rectangle collides with the event
+                if self.rect.collidepoint(event.pos):
+                    self.active = not self.active
+                    self.b_color = COLORS["LBLUE"]
+                else:
+                    self.active = False
+                    self.b_color = COLORS["WHITE"]
+
+        # If the event is a keypress
+        if event.type == pygame.KEYDOWN:
+
+            # If the cell is active check the different kinds of key presses
+            if self.active:
+                # If the key press is a backspace
+                if event.key == pygame.K_BACKSPACE:
+                    self.text = ""
+                else:
+                    try:
+                        val = int(event.unicode)
+                        self.text = event.unicode if val in range(1, 10) else ""
+                    except ValueError:
+                        self.text = ""
+                    # Re-render the text.
+                self.text_surface = FONT.render(self.text, True, COLORS["BLACK"])
 
     def draw(self, s) -> None:
         """
@@ -160,7 +192,7 @@ class Square(object):
         :return: None
         """
         # Reset the rectangle
-        pygame.draw.rect(s, COLORS["WHITE"], self.rect)
+        pygame.draw.rect(s, self.b_color, self.rect)
         # Output the text onto the screen with the current surface
         s.blit(self.text_surface, (self.rect.x + 17, self.rect.y + 13))
 
@@ -220,12 +252,32 @@ def play(delay=0.001):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            # Create a sudoku object and call solve on it
+            # Call handle_event on the tiles
+            for sq_row in puzzle.squares:
+                for sq in sq_row:
+                    sq.handle_event(event)
+
+            # If a key press is heard check for various conditions
             if event.type == pygame.KEYDOWN:
-                # If a key press is heard visually solve the puzzle
+
+                # If it's ENTER check the puzzle
+                # 13 is the event key representing ENTER
+                if event.key == 13:
+                    val = puzzle.check()
+                    if val:
+                        mistakes += val
+                        # If too many mistakes are made
+                        if mistakes >= ALLOWED_MISTAKES:
+                            print("Puzzle could not be solved")
+                            puzzle.visual_solve(screen, delay=0)
+                            pygame.quit()
+                            sys.exit()
+
+                # For auto solving
                 if event.key == pygame.K_SPACE:
                     solved = puzzle.visual_solve(screen, delay=delay)
 
+                # For hints
                 if event.key == pygame.K_h:
                     if hints_left > 0:
                         hints_left -= 1
@@ -241,6 +293,11 @@ def play(delay=0.001):
         # Constantly load the sudoku template
         screen.blit(GRID, (0, 0))
 
+        # Draw the mistakes in the bottom left
+        mistake_surface = TIME_FONT.render("Mistakes: " + str(mistakes), True, COLORS["RED"])
+        pygame.draw.rect(screen, COLORS["BLACK"], pygame.Rect(50, SCREEN_HEIGHT - 50, 200, 400))
+        screen.blit(mistake_surface, (50, SCREEN_HEIGHT - 50))
+
         # Draw the boxes
         puzzle.draw(screen)
         # Update the boxes
@@ -251,13 +308,6 @@ def play(delay=0.001):
         if solved:
             print(f"Puzzle solved in {time_str} seconds.")
             time.sleep(10)
-            pygame.quit()
-            sys.exit()
-
-        # If too many mistakes are made
-        elif mistakes == ALLOWED_MISTAKES:
-            print("Puzzle could not be solved")
-            puzzle.visual_solve(screen, delay=0)
             pygame.quit()
             sys.exit()
 
