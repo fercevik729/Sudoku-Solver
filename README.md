@@ -5,21 +5,13 @@ Make sure that each of these numbers are space-separated and are within the rang
 where 0 represents an empty cell and 1-9 represents a filled out cell. The program will
 display a visual representation of the puzzle with the option to solve it.
 
-## Installation
-
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install Sudoku-Solver.
-(To be implemented)
-```bash
-pip install git+https://github.com/fercevik729/Sudoku-Solver/master
-```
-
 ## Usage
 
 ```python
-from SudokuSolver import Sudoku_display
+from Sudoku_display import visualize
 
-# displays a pygame window of the Sudoku puzzle. To completely solve press SPACEBAR. At the end after 5 seconds it will close and print out the time it took to solve it
-Sudoku_display.visualize(delay=DELAY)
+# displays a pygame window of the Sudoku puzzle. To completely solve press SPACEBAR. The delay between calls is 0.0001 secs.
+visualize(delay=0.0001)
 
 ```
 
@@ -35,5 +27,3 @@ Sudoku_display.visualize(delay=DELAY)
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-
-## License

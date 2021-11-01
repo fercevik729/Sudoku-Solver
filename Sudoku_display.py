@@ -4,10 +4,14 @@
 # 31 October 2021
 # This program uses Sudoku_solver.py and pygame to create a visualization of the backtracking algorithm
 #
+import copy
+
 from Sudoku_solver import Sudoku
+from Sudoku_solver import get_square_coors
 import pygame
 import sys
 import time
+import random
 
 # TODO: Future program ideas: turn the visualizer into a playable game with a game clock, have Square objects that
 #  the player can edit and confirm the values of, have a background process that checks for mistakes and solves the
@@ -15,7 +19,7 @@ import time
 
 # Pygame window setup
 pygame.init()
-SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+SCREEN_WIDTH, SCREEN_HEIGHT = 800, 700
 screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 pygame.display.set_caption("Sudoku")
 
@@ -28,11 +32,47 @@ DELAY = 0.0001
 FONT = pygame.font.Font(None, 25)
 
 
-class Square (object):
+class Puzzle(object):
+    """
+    Makes Puzzle objects that can hold Square objects
+    """
+
+    def __init__(self):
+        self.board = []
+        self.solved_board = []
+        self.squares = []
+
+        self.random_generate_board()
+
+    def random_generate_board(self) -> None:
+        """
+        Generates a random unsolved sudoku puzzle
+        :return: None
+        """
+
+        # Generate a full random sudoku puzzle
+        b = [[0] * 9 for _ in range(9)]
+        numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+        b[0][0] = random.choice(numbers)
+        sudoku = Sudoku(b)
+        sudoku.solve()
+
+        blanks = 60
+        for p in random.sample(range(81), blanks):
+            sudoku.board[p // 9][p % 9] = 0
+
+        self.board = copy.deepcopy(sudoku.board)
+        sudoku.solve()
+        self.solved_board = sudoku.board
+
+
+class Square(object):
     # TODO: add event handler for sudoku game
     """
      Makes Square objects that represents the individual squares of the Sudoku puzzle
     """
+
     def __init__(self, x, y, s, text=""):
         """
         Initializes a Tile object
@@ -55,7 +95,7 @@ class Square (object):
         # Reset the rectangle
         pygame.draw.rect(s, COLORS["WHITE"], self.rect)
         # Output the text onto the screen with the current surface
-        s.blit(self.text_surface, (self.rect.x+17, self.rect.y+13))
+        s.blit(self.text_surface, (self.rect.x + 17, self.rect.y + 13))
 
         # Reset the text surface color
         self.text_surface = FONT.render(str(self.text), True, COLORS["BLACK"])
@@ -87,7 +127,7 @@ class Square (object):
         return int(self.text) if self.text else 0
 
 
-def main():
+def visualize(delay=0.001):
     start_time = time.time()
     s = Sudoku(file="Sudokus")
     # Create all the square objects and store them in a list of lists
@@ -114,12 +154,8 @@ def main():
             # Create a sudoku object and call solve on it
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    solved = s.solve(boxes, screen, delay=DELAY)
-        if solved:
-            print(f"Puzzle solved in {(time.time() - start_time):.2f} seconds.")
-            time.sleep(5)
-            pygame.quit()
-            sys.exit()
+                    solved = s.solve(boxes, screen, delay=delay)
+
         # If the program takes too long just quit lmao
         if time.time() - start_time > 400:
             pygame.quit()
@@ -136,6 +172,16 @@ def main():
         pygame.display.flip()
         clock.tick(30)
 
+        # If the puzzle is solved
+        if solved:
+            print(f"Puzzle solved in {(time.time() - start_time):.2f} seconds.")
+            time.sleep(10)
+            pygame.quit()
+            sys.exit()
 
-main()
 
+# visualize(delay=DELAY)
+for n in range(20):
+    puz = Puzzle()
+    print(Sudoku(puz.board))
+    print(Sudoku(puz.solved_board))
