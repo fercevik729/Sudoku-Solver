@@ -8,10 +8,10 @@ display a visual representation of the puzzle with the option to solve it.
 ## Usage
 
 ```python
-from Sudoku_display import visualize
+from Sudoku_game import play
 
-# displays a pygame window of the Sudoku puzzle. To completely solve press SPACEBAR. The delay between calls is 0.0001 secs.
-visualize(delay=0.0001)
+# plays the game
+play(delay=0.0001)
 
 ```
 

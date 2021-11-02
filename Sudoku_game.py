@@ -7,6 +7,7 @@
 import copy
 import datetime
 from Sudoku_solver import Sudoku
+from Sudoku_solver import get_square_coors
 import pygame
 import sys
 import time
@@ -24,7 +25,8 @@ LOGO = pygame.image.load("assets/letter_s.png")
 GRID = pygame.image.load("assets/blank-sudoku-grid.png")
 pygame.display.set_icon(LOGO)
 COLORS = {"WHITE": (255, 255, 255), "BLACK": (0, 0, 0), "GREEN": (0, 255, 0), "RED": (255, 0, 0),
-          "LBLUE": (173, 216, 230), "YELLOW": (255, 255, 0), "DARKGRAY": (105, 105, 105), "GRAY": (220, 220, 220)}
+          "LBLUE": (173, 216, 230), "BLUE": (65, 105, 225), "YELLOW": (255, 255, 0),
+          "DARKGRAY": (105, 105, 105), "GRAY": (220, 220, 220)}
 DELAY = 0.0001
 FONT = pygame.font.SysFont("Trebuchet", 35)
 NOTE_FONT = pygame.font.SysFont("Trebuchet", 20)
@@ -128,10 +130,28 @@ class Puzzle(object):
         sudo = Sudoku(board=self.board)
         return sudo.solve(self.squares, window, delay)
 
-    def draw(self, s):
+    def draw(self, s) -> None:
+        """
+        Draws the tiles of the board as well as the adjacent tiles if a given tile is active
+        :param s: pygame window
+        :return: None
+        """
+        # Checks if there are any active squares
+        flag = False
+        active_sq = None
         for row in self.squares:
             for sq in row:
+                # If there is an active square highlight all the adjacent squares
+                if sq.active:
+                    flag = True
+                    active_sq = sq
                 sq.draw(s)
+        # If there are active squares highlight the adjacent squares
+        if flag:
+            draw_others = self.neighbor_squares(active_sq.r, active_sq.c)
+            for elem in draw_others:
+                r, c = elem
+                self.squares[r][c].draw(s, color=COLORS["BLUE"])
 
     def handle_event(self, event):
         """
@@ -205,6 +225,20 @@ class Puzzle(object):
                         else:
                             i -= 1
                     new_active_sq.toggle()
+
+    def neighbor_squares(self, r, c) -> list:
+        """
+        Returns a list of neighboring squares for a given square's row and column index
+        :param r: row index
+        :param c: col index
+        :return: list of neighboring squares' indices
+        """
+        neighbors = []
+        s = Sudoku(self.board)
+        neighbors.extend(s.get_col_idx(r, c))
+        neighbors.extend(s.get_row_idx(r, c))
+        neighbors.extend(get_square_coors((r, c)))
+        return neighbors
 
 
 class Square(object):
@@ -283,16 +317,20 @@ class Square(object):
                         self.text = ""
                 self.text_surface = FONT.render(self.text, True, COLORS["RED"])
 
-    def draw(self, s) -> None:
+    def draw(self, s, color=None) -> None:
         """
         Blits a white rect onto the previous text to replace it, renders the text surface, then resets the text color
         If notemode is enabled blit a light gray rectangle
         :param s: pygame surface to draw on
+        :param color: auxilliary color choice for drawing highlighted squares
         :return: None
         """
         if not self.note_mode:
             # Reset the rectangle
-            pygame.draw.rect(s, self.b_color, self.rect)
+            if color:
+                pygame.draw.rect(s, color, self.rect)
+            else:
+                pygame.draw.rect(s, self.b_color, self.rect)
             # Output the text onto the screen with the current surface
             s.blit(self.text_surface, (self.rect.x + 32, self.rect.y + 22))
             # Reset the text surface color
@@ -307,7 +345,7 @@ class Square(object):
                     s.blit(surface, (self.rect.x + 5 + (integer-1) * 20, self.rect.y))
                 elif integer in range(4, 7):
                     s.blit(surface,
-                           (self.rect.x + 5 + (integer-4)* 20, self.rect.y + 20))
+                           (self.rect.x + 5 + (integer-4) * 20, self.rect.y + 20))
                 elif integer in range(7, 10):
                     s.blit(surface,
                            (self.rect.x + 5 + (integer-7) * 20, self.rect.y + 40))
@@ -355,7 +393,30 @@ class Square(object):
         return int(self.text) if self.text else 0
 
 
-def play(delay=0.001):
+def instructions():
+    print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
+    print("|          Welcome to my Sudoku game!!        |")
+    print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
+    print("|                   CONTROLS                  |")
+    print("|    MOUSECLICK = Select/Deselect a square    |")
+    print("|          ENTER = Check for accuracy         |")
+    print("|              H = Ask for a hint             |")
+    print("|    N = enable/disable notes for a square    |")
+    print("|       SPACEBAR = Solve puzzle entirely      |")
+    print("| WASD = up, down, left, right, respectively  |")
+    print("| UP,DOWN,LEFT,RIGHT = up, down, left, right  |")
+    print("|                 ESC = QUIT                  |")
+    print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
+
+
+def play(delay=0.001) -> None:
+    """
+    Plays the sudoku game
+    :param delay: delay of the visual solve
+    :return: None
+    """
+    instructions()
+    # Get the start time
     start_time = datetime.datetime.now()
     # Create the Puzzle object to represent the game board
     puzzle = Puzzle()
@@ -454,22 +515,4 @@ def play(delay=0.001):
             sys.exit()
 
 
-def instructions():
-    print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
-    print("|          Welcome to my Sudoku game!!        |")
-    print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
-    print("|                   CONTROLS                  |")
-    print("|    MOUSECLICK = Select/Deselect a square    |")
-    print("|          ENTER = Check for accuracy         |")
-    print("|              H = Ask for a hint             |")
-    print("|    N = enable/disable notes for a square    |")
-    print("|       SPACEBAR = Solve puzzle entirely      |")
-    print("| WASD = up, down, left, right, respectively  |")
-    print("| UP,DOWN,LEFT,RIGHT = up, down, left, right  |")
-    print("|                 ESC = QUIT                  |")
-    print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
-
-
-instructions()
 play(delay=DELAY)
-
