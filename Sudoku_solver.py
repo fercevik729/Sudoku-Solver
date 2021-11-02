@@ -194,34 +194,32 @@ class Sudoku(object):
         """
         return [val for val in self.board[index]]
 
+    def get_col_idx(self, row: int, col: int) -> list:
+        """
+        Returns a list of the indices of a square's column
+        :param row: row
+        :param col: col
+        :return: list of indices
+        """
+        return [(r, col) for r in range(9) if r != row]
+
+    def get_row_idx(self, row: int, col: int) -> list:
+        """
+        Returns a list of the indices of a square's row
+        :param row: row
+        :param col: col
+        :return: list of indices
+        """
+        return [(row,c) for c in range(9) if c != col]
+
 
 def main():
-    board = [[0, 0, 4, 0, 0, 0, 0, 6, 7],
-             [3, 0, 0, 4, 7, 0, 0, 0, 5],
-             [1, 5, 0, 8, 2, 0, 0, 0, 3],
-
-             [0, 0, 6, 0, 0, 0, 0, 3, 1],
-             [8, 0, 2, 1, 0, 5, 6, 0, 4],
-             [4, 1, 0, 0, 0, 0, 9, 0, 0],
-
-             [7, 0, 0, 0, 8, 0, 0, 4, 6],
-             [6, 0, 0, 0, 1, 2, 0, 0, 0],
-             [9, 3, 0, 0, 0, 0, 7, 1, 0]]
+    board = [[3, 6, 9, 7, 5, 4, 1, 2, 8], [2, 4, 7, 8, 6, 1, 3, 9, 7], [8, 1, 5, 2, 9, 3, 6, 4, 7], [6, 3, 2, 5, 4, 7, 8, 6, 1], [9, 5, 8, 6, 1, 2, 7, 7, 3], [1, 7, 4, 3, 8, 9, 5, 9, 2], [7, 8, 1, 9, 2, 5, 4, 3, 6], [4, 2, 3, 4, 0, 6, 9, 1, 5], [5, 9, 6, 1, 3, 8, 2, 8, 7]]
 
     s = Sudoku(board=board)
     print(s)
     s.solve()
     print(s)
-
-    p = Sudoku(file="Sudokus")
-    print(p)
-    p.solve()
-    print(p)
-
-    print(get_square_coors((0,0)))
-
-
-main()
 
 
 
