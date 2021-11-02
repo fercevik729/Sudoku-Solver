@@ -12,7 +12,6 @@ import sys
 import time
 import random
 
-# TODO: Make "note" function for user to note potential values in the squares bound to RIGHT-CLICK
 
 # Pygame window setup
 pygame.init()
@@ -25,10 +24,11 @@ LOGO = pygame.image.load("assets/letter_s.png")
 GRID = pygame.image.load("assets/blank-sudoku-grid.png")
 pygame.display.set_icon(LOGO)
 COLORS = {"WHITE": (255, 255, 255), "BLACK": (0, 0, 0), "GREEN": (0, 255, 0), "RED": (255, 0, 0),
-          "LBLUE": (173, 216, 230), "YELLOW": (255, 255, 0)}
+          "LBLUE": (173, 216, 230), "YELLOW": (255, 255, 0), "DARKGRAY": (105, 105, 105), "GRAY": (220, 220, 220)}
 DELAY = 0.0001
-FONT = pygame.font.SysFont("Trebuchet", 25)
-TIME_FONT = pygame.font.SysFont("Trebuchet", 40)
+FONT = pygame.font.SysFont("Trebuchet", 35)
+NOTE_FONT = pygame.font.SysFont("Trebuchet", 20)
+HEADING_FONT = pygame.font.SysFont("Trebuchet", 40)
 ALLOWED_MISTAKES = 3
 ALLOWED_HINTS = 5
 
@@ -208,7 +208,6 @@ class Puzzle(object):
 
 
 class Square(object):
-    # TODO: add gray numbers
     """
      Makes Square objects that represents the individual squares of the Sudoku puzzle
     """
@@ -230,22 +229,29 @@ class Square(object):
         self.text_surface = FONT.render(text, True, COLORS["BLACK"])
         self.b_color = COLORS["WHITE"]
         self.active = None if not mutable else False
+        self.note_mode = False
+        self.note = []
 
     def handle_event(self, event) -> None:
-
+        """
+        Handles events for Square objects
+        :param event: pygame.event
+        :return: None
+        """
         # If the event is a mouse click
         if event.type == pygame.MOUSEBUTTONDOWN:
             # Check if the square can be active
-            # Check if the click is left-click
-            if event.button == 1:
-                if self.active is not None:
-                    # Check if the rectangle collides with the event
-                    if self.rect.collidepoint(event.pos):
-                        self.active = not self.active
-                        self.b_color = COLORS["LBLUE"]
-                    else:
-                        self.active = False
-                        self.b_color = COLORS["WHITE"]
+            if self.active is not None:
+                # Check if the rectangle collides with the event
+                if self.rect.collidepoint(event.pos):
+                    self.active = not self.active
+                    self.b_color = COLORS["LBLUE"]
+                    # Check if note_mode is on and if so disable it and reset the notes
+                    self.note_mode = False
+                    self.note = []
+                else:
+                    self.active = False
+                    self.b_color = COLORS["WHITE"]
 
         # If the event is a keypress
         if event.type == pygame.KEYDOWN:
@@ -255,12 +261,24 @@ class Square(object):
                 if event.key == pygame.K_BACKSPACE:
                     self.text = ""
                 # If the event key is a movement key render the text surface
-                elif event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_RIGHT, pygame.K_LEFT, pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
+                elif event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_RIGHT, pygame.K_LEFT, pygame.K_w, pygame.K_s,
+                                   pygame.K_a, pygame.K_d]:
                     self.text_surface = FONT.render(self.text, True, COLORS["RED"])
+
+                # Toggle note_mode when key N is pressed
+                elif event.key == pygame.K_n:
+                    self.note_mode = not self.note_mode
+                    self.b_color = COLORS["GRAY"] if self.note_mode else COLORS["LBLUE"]
                 else:
                     try:
-                        val = int(event.unicode)
-                        self.text = event.unicode if val in range(1, 10) else ""
+                        if not self.note_mode:
+                            val = int(event.unicode)
+                            self.text = event.unicode if val in range(1, 10) else ""
+                        else:
+                            # Draw the little note
+                            if int(event.unicode) in range(1, 10):
+                                self.note.append(event.unicode)
+
                     except ValueError:
                         self.text = ""
                 self.text_surface = FONT.render(self.text, True, COLORS["RED"])
@@ -268,20 +286,37 @@ class Square(object):
     def draw(self, s) -> None:
         """
         Blits a white rect onto the previous text to replace it, renders the text surface, then resets the text color
+        If notemode is enabled blit a light gray rectangle
         :param s: pygame surface to draw on
         :return: None
         """
-        # Reset the rectangle
-        pygame.draw.rect(s, self.b_color, self.rect)
-        # Output the text onto the screen with the current surface
-        s.blit(self.text_surface, (self.rect.x + 32, self.rect.y + 22))
-        # Reset the text surface color
-        color = COLORS["RED"] if self.active is not None else COLORS["BLACK"]
-        self.text_surface = FONT.render(str(self.text), True, color)
+        if not self.note_mode:
+            # Reset the rectangle
+            pygame.draw.rect(s, self.b_color, self.rect)
+            # Output the text onto the screen with the current surface
+            s.blit(self.text_surface, (self.rect.x + 32, self.rect.y + 22))
+            # Reset the text surface color
+            color = COLORS["RED"] if self.active is not None else COLORS["BLACK"]
+            self.text_surface = FONT.render(str(self.text), True, color)
+        else:
+            pygame.draw.rect(s, self.b_color, self.rect)
+            for v in self.note:
+                integer = int(v)
+                surface = NOTE_FONT.render(v, True, COLORS["DARKGRAY"])
+                if integer in range(1, 4):
+                    s.blit(surface, (self.rect.x + 5 + (integer-1) * 20, self.rect.y))
+                elif integer in range(4, 7):
+                    s.blit(surface,
+                           (self.rect.x + 5 + (integer-4)* 20, self.rect.y + 20))
+                elif integer in range(7, 10):
+                    s.blit(surface,
+                           (self.rect.x + 5 + (integer-7) * 20, self.rect.y + 40))
+
+                pygame.display.update(self.rect)
 
     def toggle(self):
         """
-        Toggles the activity status if active isn't None as well as the color of the box
+        Toggles the activity status if the cell's active isn't None as well as the color of the box
         :return: None
         """
         if self.active is not None:
@@ -330,7 +365,6 @@ def play(delay=0.001):
     # Game loop
     solved = False
     clock = pygame.time.Clock()
-    active_sq = None
     while True:
 
         # Draw the clock on the screen
@@ -338,7 +372,7 @@ def play(delay=0.001):
         s = elapsed_time.seconds
         minutes, seconds = divmod(s, 60)
         time_str = f'Time:  {minutes:02}:{seconds:02}'
-        time_surface = TIME_FONT.render(str(time_str), True, COLORS["WHITE"])
+        time_surface = HEADING_FONT.render(str(time_str), True, COLORS["WHITE"])
         # Clear the old time with the new time
         pygame.draw.rect(screen, COLORS["BLACK"], pygame.Rect(SCREEN_WIDTH-195, SCREEN_HEIGHT - 60, 200, 60))
         screen.blit(time_surface, (SCREEN_WIDTH-195, SCREEN_HEIGHT-60))
@@ -357,6 +391,12 @@ def play(delay=0.001):
 
             # If a key press is heard check for various conditions
             if event.type == pygame.KEYDOWN:
+
+                # If key is ESCAPE quit the game
+                if event.key == pygame.K_ESCAPE:
+                    print("Game ended.")
+                    pygame.quit()
+                    sys.exit()
                 # If it's ENTER check the puzzle
                 # 13 is the event key representing ENTER
                 if event.key == 13:
@@ -365,7 +405,7 @@ def play(delay=0.001):
                         mistakes += val
                         # If too many mistakes are made
                         if mistakes >= ALLOWED_MISTAKES:
-                            print("Puzzle could not be solved")
+                            print("Puzzle could not be solved.")
                             puzzle.visual_solve(screen, delay=0)
                             pygame.quit()
                             sys.exit()
@@ -380,23 +420,23 @@ def play(delay=0.001):
                         hints_left -= 1
                         puzzle.hint()
                     else:
-                        print("Sorry buddy you're out of hints")
+                        print("Sorry buddy you're out of hints.")
 
         # If the program takes too long just quit lmao
         if datetime.datetime.now() - start_time > datetime.timedelta(minutes=10):
             pygame.quit()
-            print("Bummer...the puzzle appears unsolvable")
+            print("Bummer...the puzzle appears unsolvable.")
             sys.exit()
         # Constantly load the sudoku template
         screen.blit(GRID, (0, 0))
 
         # Draw the mistakes in the bottom left
-        mistake_surface = TIME_FONT.render("Mistakes: " + str(mistakes), True, COLORS["RED"])
+        mistake_surface = HEADING_FONT.render("Mistakes: " + str(mistakes), True, COLORS["RED"])
         pygame.draw.rect(screen, COLORS["BLACK"], pygame.Rect(30, SCREEN_HEIGHT - 60, 200, 400))
         screen.blit(mistake_surface, (30, SCREEN_HEIGHT - 60))
 
         # Draw the Sudoku name
-        title_surface = TIME_FONT.render("Welcome to Sudoku", True, COLORS["YELLOW"])
+        title_surface = HEADING_FONT.render("Welcome to Sudoku", True, COLORS["YELLOW"])
         pygame.draw.rect(screen, COLORS["BLACK"], pygame.Rect(260, SCREEN_HEIGHT - 60, 270, 400))
         screen.blit(title_surface, (260, SCREEN_HEIGHT - 60))
         # Draw the boxes
@@ -414,4 +454,22 @@ def play(delay=0.001):
             sys.exit()
 
 
+def instructions():
+    print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
+    print("|          Welcome to my Sudoku game!!        |")
+    print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
+    print("|                   CONTROLS                  |")
+    print("|    MOUSECLICK = Select/Deselect a square    |")
+    print("|          ENTER = Check for accuracy         |")
+    print("|              H = Ask for a hint             |")
+    print("|    N = enable/disable notes for a square    |")
+    print("|       SPACEBAR = Solve puzzle entirely      |")
+    print("| WASD = up, down, left, right, respectively  |")
+    print("| UP,DOWN,LEFT,RIGHT = up, down, left, right  |")
+    print("|                 ESC = QUIT                  |")
+    print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
+
+
+instructions()
 play(delay=DELAY)
+
