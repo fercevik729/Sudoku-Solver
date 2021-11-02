@@ -78,7 +78,7 @@ class Puzzle(object):
         sudoku.solve()
 
         # Generates the blank spaces
-        blanks = 60
+        blanks = 55
         for p in random.sample(range(81), blanks):
             sudoku.board[p // 9][p % 9] = 0
 
@@ -104,12 +104,24 @@ class Puzzle(object):
                     returnable += 1
         return returnable
 
+    def filled(self) -> bool:
+        """
+        Checks if all the squares are filled
+        :return: True if all squares are filled, False if they aren't
+        """
+
+        for row in self.squares:
+            for sq in row:
+                if not sq.text:
+                    return False
+        return True
+
     def hint(self) -> None:
         """
         Modifies an empty square with a correct answer
         :return:
         """
-        idx = random.randint(0, 82)
+        idx = random.randint(0, 81)
         r = idx // 9
         c = idx % 9
         # While the square's value is filled
@@ -120,7 +132,7 @@ class Puzzle(object):
         self.squares[r][c].replace(self.solved_board[r][c])
         self.squares[r][c].active = None
 
-    def visual_solve(self, window, delay) -> bool:
+    def visual_solve(self, window: pygame.surface, delay: float) -> bool:
         """
         Creates a Sudoku object and calls solve on it with visualization on
         :param window:
@@ -130,7 +142,7 @@ class Puzzle(object):
         sudo = Sudoku(board=self.board)
         return sudo.solve(self.squares, window, delay)
 
-    def draw(self, s) -> None:
+    def draw(self, s: pygame.surface) -> None:
         """
         Draws the tiles of the board as well as the adjacent tiles if a given tile is active
         :param s: pygame window
@@ -151,9 +163,9 @@ class Puzzle(object):
             draw_others = self.neighbor_squares(active_sq.r, active_sq.c)
             for elem in draw_others:
                 r, c = elem
-                self.squares[r][c].draw(s, color=COLORS["BLUE"])
+                self.squares[r][c].draw(s, color=COLORS["BLUE"], adj=True)
 
-    def handle_event(self, event):
+    def handle_event(self, event: pygame.event):
         """
         Handles movement key events
         :return: True if movement occurred
@@ -226,7 +238,7 @@ class Puzzle(object):
                             i -= 1
                     new_active_sq.toggle()
 
-    def neighbor_squares(self, r, c) -> list:
+    def neighbor_squares(self, r: int, c: int) -> list:
         """
         Returns a list of neighboring squares for a given square's row and column index
         :param r: row index
@@ -239,6 +251,20 @@ class Puzzle(object):
         neighbors.extend(s.get_row_idx(r, c))
         neighbors.extend(get_square_coors((r, c)))
         return neighbors
+
+    def deactivate(self, s: pygame.surface):
+        for row in self.squares:
+            for sq in row:
+                if sq.note_mode:
+                    sq.note_mode = False
+                    sq.note = []
+                    sq.b_color = (255, 255, 255)
+                    sq.draw(s)
+                if sq.active:
+                    sq.active = False
+                    sq.b_color = (255, 255, 255)
+                    sq.draw(s)
+                pygame.display.update(sq.rect)
 
 
 class Square(object):
@@ -266,7 +292,7 @@ class Square(object):
         self.note_mode = False
         self.note = []
 
-    def handle_event(self, event) -> None:
+    def handle_event(self, event: pygame.event) -> None:
         """
         Handles events for Square objects
         :param event: pygame.event
@@ -279,7 +305,7 @@ class Square(object):
                 # Check if the rectangle collides with the event
                 if self.rect.collidepoint(event.pos):
                     self.active = not self.active
-                    self.b_color = COLORS["LBLUE"]
+                    self.b_color = COLORS["LBLUE"] if self.active else COLORS['WHITE']
                     # Check if note_mode is on and if so disable it and reset the notes
                     self.note_mode = False
                     self.note = []
@@ -289,7 +315,24 @@ class Square(object):
 
         # If the event is a keypress
         if event.type == pygame.KEYDOWN:
-            # If the cell is active check the different kinds of key presses
+            # If note mode is enabled
+            if self.note_mode:
+                # Was backspace key pressed
+                if event.key == pygame.K_BACKSPACE:
+                    try:
+                        self.note.pop()
+                    # If there are no more note numbers left set the box's note mode to False
+                    except IndexError:
+                        self.note_mode = False
+                # Add the integer to the notes
+                try:
+                    if int(event.unicode) in range(1, 10):
+                        self.note.append(event.unicode)
+                        self.note.sort()
+                except ValueError:
+                    pass
+
+            # If the cell is active check for other key presses
             if self.active:
                 # If the key press is a backspace
                 if event.key == pygame.K_BACKSPACE:
@@ -305,22 +348,17 @@ class Square(object):
                     self.b_color = COLORS["GRAY"] if self.note_mode else COLORS["LBLUE"]
                 else:
                     try:
-                        if not self.note_mode:
-                            val = int(event.unicode)
-                            self.text = event.unicode if val in range(1, 10) else ""
-                        else:
-                            # Draw the little note
-                            if int(event.unicode) in range(1, 10):
-                                self.note.append(event.unicode)
-
+                        val = int(event.unicode)
+                        self.text = event.unicode if val in range(1, 10) else ""
                     except ValueError:
                         self.text = ""
                 self.text_surface = FONT.render(self.text, True, COLORS["RED"])
 
-    def draw(self, s, color=None) -> None:
+    def draw(self, s: pygame.surface, color=None, adj=False) -> None:
         """
         Blits a white rect onto the previous text to replace it, renders the text surface, then resets the text color
-        If notemode is enabled blit a light gray rectangle
+        If note mode is enabled blit a light gray rectangle
+        :param adj: flag to determine if the square is being drawn adjacently
         :param s: pygame surface to draw on
         :param color: auxilliary color choice for drawing highlighted squares
         :return: None
@@ -337,7 +375,10 @@ class Square(object):
             color = COLORS["RED"] if self.active is not None else COLORS["BLACK"]
             self.text_surface = FONT.render(str(self.text), True, color)
         else:
-            pygame.draw.rect(s, self.b_color, self.rect)
+            if adj:
+                pygame.draw.rect(s, (135, 206, 250), self.rect)
+            else:
+                pygame.draw.rect(s, self.b_color, self.rect)
             for v in self.note:
                 integer = int(v)
                 surface = NOTE_FONT.render(v, True, COLORS["DARKGRAY"])
@@ -350,7 +391,7 @@ class Square(object):
                     s.blit(surface,
                            (self.rect.x + 5 + (integer-7) * 20, self.rect.y + 40))
 
-                pygame.display.update(self.rect)
+                    pygame.display.update(self.rect)
 
     def toggle(self):
         """
@@ -376,7 +417,7 @@ class Square(object):
         self.text_surface = FONT.render(str(self.text), True, COLORS["WHITE"])
         self.text = ""
 
-    def replace(self, value) -> None:
+    def replace(self, value: str) -> None:
         """
         Renders the text surface with a green color
         :param value: the value to replace the original text with
@@ -397,7 +438,7 @@ def instructions():
     print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
     print("|          Welcome to my Sudoku game!!        |")
     print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
-    print("|                   CONTROLS                  |")
+    print("|                 CONTROLS                    |")
     print("|    MOUSECLICK = Select/Deselect a square    |")
     print("|          ENTER = Check for accuracy         |")
     print("|              H = Ask for a hint             |")
@@ -422,6 +463,8 @@ def play(delay=0.001) -> None:
     puzzle = Puzzle()
     hints_left = ALLOWED_HINTS
     mistakes = 0
+    # Blit the sudoku grid
+    screen.blit(GRID, (0, 0))
 
     # Game loop
     solved = False
@@ -461,18 +504,31 @@ def play(delay=0.001) -> None:
                 # If it's ENTER check the puzzle
                 # 13 is the event key representing ENTER
                 if event.key == 13:
-                    val = puzzle.check()
-                    if val:
-                        mistakes += val
+                    mistake = puzzle.check()
+                    win = puzzle.filled()
+
+                    # If there was a mistake
+                    if mistake:
+                        mistakes += mistake
                         # If too many mistakes are made
                         if mistakes >= ALLOWED_MISTAKES:
                             print("Puzzle could not be solved.")
                             puzzle.visual_solve(screen, delay=0)
                             pygame.quit()
                             sys.exit()
+                    # If the player correctly fills the puzzle
+                    elif win:
+                        print(f"Puzzle was solved in {minutes} minutes and {seconds} seconds")
+                        if minutes < 5:
+                            print(f"Hmmm are you a puzzle solver too??")
+                        pygame.quit()
+                        sys.exit()
 
                 # For auto solving
                 if event.key == pygame.K_SPACE:
+                    # Deactivate all the notes and highlighting
+                    puzzle.deactivate(screen)
+                    # Solve with the delay
                     solved = puzzle.visual_solve(screen, delay=delay)
 
                 # For hints
@@ -488,8 +544,6 @@ def play(delay=0.001) -> None:
             pygame.quit()
             print("Bummer...the puzzle appears unsolvable.")
             sys.exit()
-        # Constantly load the sudoku template
-        screen.blit(GRID, (0, 0))
 
         # Draw the mistakes in the bottom left
         mistake_surface = HEADING_FONT.render("Mistakes: " + str(mistakes), True, COLORS["RED"])
@@ -509,8 +563,8 @@ def play(delay=0.001) -> None:
 
         # If the puzzle is solved
         if solved:
-            print(f"Puzzle solved in {time_str} minutes and seconds.")
-            time.sleep(10)
+            print(f"Puzzle was auto-solved in {minutes} minutes and {seconds} seconds.")
+            time.sleep(5)
             pygame.quit()
             sys.exit()
 
