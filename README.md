@@ -37,4 +37,4 @@ or simply restart the game. Often restarting does the trick.
 to the game since during this phase it is performing a relatively more CPU-intensive task
 
 ## License
-This repository is licensed with an MIT license (License)
+This repository is licensed with an MIT license ![MIT](License)
