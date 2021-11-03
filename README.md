@@ -36,5 +36,8 @@ or simply restart the game. Often restarting does the trick.
 * During the auto-solving phase it is highly advised to minimize the amount of keyboard or mouse inputs that are given
 to the game since during this phase it is performing a relatively more CPU-intensive task
 
+## Issues
+Please notify of any issues with the game, by opening a pull request.
+
 ## License
 This repository is licensed with an ![MIT](License) license.
