@@ -37,4 +37,4 @@ or simply restart the game. Often restarting does the trick.
 to the game since during this phase it is performing a relatively more CPU-intensive task
 
 ## License
-![MIT](Sudoku-Solver/LICENSE.txt)
+![MIT](LICENSE)
