@@ -35,3 +35,4 @@ play(delay=0.0001)
 or simply restart the game. Often restarting does the trick. 
 * During the auto-solving phase it is highly advised to minimize the amount of keyboard or mouse inputs that are given
 to the game since during this phase it is performing a relatively more CPU-intensive task
+##License
