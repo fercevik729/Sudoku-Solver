@@ -37,7 +37,7 @@ or simply restart the game. Often restarting does the trick.
 to the game since during this phase it is performing a relatively more CPU-intensive task
 
 ## Issues
-Please notify of any issues with the game, by opening a pull request.
+Please notify of any issues with the game by opening a pull request.
 
 ## License
-This repository is licensed with an ![MIT](License) license.
+This repository is licensed with an ![MIT](https://github.com/fercevik729/Sudoku-Solver/blob/5643bb0253a86e457330ac5d00c8e3d670ef3a68/LICENSE) license.
