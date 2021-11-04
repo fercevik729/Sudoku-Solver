@@ -1,7 +1,7 @@
 # Sudoku-Solver
 Hi, my name is Furkan and this is my simple single player sudoku game built using pygame.
 To use: import the play function from the Sudoku_game module. Then provide a delay to be used during the visualization of
-the final auto-solving process. It is recommended for the delay to be in the range(0.0001, 0.001). Further instructions on how to play the game will be outputted to the Console window. They
+the final auto-solving process. It is recommended for the delay to be in the range(0, 0.0005). Further instructions on how to play the game will be outputted to the Console window. They
 will also be printed below:
 
 ## Instructions
