@@ -39,5 +39,6 @@ to the game since during this phase it is performing a relatively more CPU-inten
 Please notify of any issues with the game by opening a pull request.
 
 ## License
-(c) Furkan T. Ercevik
+© Furkan T. Ercevik
+
 This repository is licensed with an ![MIT](LICENSE) license.
